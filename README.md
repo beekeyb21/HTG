@@ -54,13 +54,17 @@ htg-monitoring/
 ├── LICENSE
 ├── docs/
 │   ├── mo-ta-thiet-ke.md      # Tài liệu thiết kế gốc (đầy đủ)
-│   └── architecture.md         # Kiến trúc & luồng dữ liệu
+│   ├── architecture.md         # Kiến trúc & luồng dữ liệu
+│   └── superpowers/specs/      # Spec các đợt phát triển
 └── src/                         # Phần mềm giám sát (web app)
     ├── index.html
     ├── css/style.css
     └── js/
-        ├── app.js               # Logic hiển thị, cảnh báo, lưu trữ
-        └── mock-data.js         # Mô phỏng dữ liệu đầu đo (thay bằng API thật khi có phần cứng)
+        ├── app.js               # Điều phối: hiển thị, cảnh báo, lưu trữ bằng chứng
+        ├── mock-data.js         # Mô phỏng suất liều 3 đầu đo   (thay bằng API/WebSocket thật)
+        ├── mock-data.test.js    # Kiểm chứng bộ mô phỏng không trôi nền
+        ├── camera.js            # Nguồn hình ảnh camera          (thay bằng RTSP/MJPEG thật)
+        └── alarm.js             # Còi cảnh báo (Web Audio API)
 ```
 
 ## Phần mềm giám sát (Web)
@@ -68,26 +72,37 @@ htg-monitoring/
 Giao diện web chia thành **3 vùng** tương ứng 3 đầu đo (Vị trí 1, 2, 3). Mỗi vùng hiển thị:
 
 - Giá trị đo suất liều gamma theo thời gian thực
-- Hình ảnh camera của vị trí đó
+- Hình ảnh camera của vị trí đó, kèm chỉ báo **● REC** khi đang ghi bằng chứng
 - Đèn trạng thái: **xanh** (bình thường) / **vàng** (cảnh báo mức 1) / **đỏ** (cảnh báo mức 2)
-- Còi cảnh báo (âm thanh) khi vượt ngưỡng
-- Khi có cảnh báo: tự động chụp và lưu ảnh camera theo chu kỳ **10 giây/ảnh**, kèm giá trị đo tại từng thời điểm
+- Còi cảnh báo: bíp ngắt quãng khi vàng, hú liên tục khi đỏ
+- Khi có cảnh báo: tự động chụp và lưu ảnh camera theo chu kỳ **10 giây/ảnh**, kèm giá trị đo **tại từng thời điểm chụp**
 
-Hiện tại phần mềm dùng **dữ liệu mô phỏng** (`mock-data.js`) để bạn xem trước giao diện và luồng cảnh báo. Khi tích hợp phần cứng thật, chỉ cần thay `mock-data.js` bằng module gọi API/WebSocket từ thân thiết bị (xem [Lộ trình phát triển](#lộ-trình-phát-triển)).
+Ảnh đã lưu hiện trong khu **Lịch sử ảnh cảnh báo** ở cuối trang — mỗi ảnh gắn suất liều và mốc thời gian, bấm vào để phóng to. Demo giữ 60 ảnh gần nhất trong bộ nhớ trình duyệt.
+
+Hiện tại **dữ liệu đo và hình ảnh camera đều là mô phỏng** (`mock-data.js`, `camera.js`), nhưng ảnh chụp là ảnh JPEG thật nên toàn bộ luồng cảnh báo → chụp → lưu trữ chạy end-to-end đúng như khi có phần cứng. Khi tích hợp thiết bị thật, thay hai module đó là xong; `app.js` không cần sửa (xem [Lộ trình phát triển](#lộ-trình-phát-triển)).
 
 ## Chạy thử
 
-Không cần cài đặt gì thêm — mở trực tiếp file HTML:
+Không cần cài đặt gì thêm:
 
 ```bash
-# Cách 1: mở trực tiếp
-open src/index.html        # macOS
-start src/index.html       # Windows
-
-# Cách 2: chạy local server (khuyến nghị, tránh lỗi CORS khi sau này gọi API thật)
 cd src
 python3 -m http.server 8080
 # Truy cập http://localhost:8080
+```
+
+Mở bằng `file://` cũng chạy, nhưng nên dùng local server để tránh lỗi CORS khi sau này gọi API thật.
+
+Ba điều cần biết khi demo:
+
+1. **Bấm nút `🔇 Bấm để bật tiếng` ở góc trên bên phải trước.** Trình duyệt chặn phát âm thanh cho tới khi trang nhận được thao tác thật của người dùng — không bấm thì còi sẽ câm. Bấm lại để tắt tiếng khi cần thuyết trình.
+2. **Dùng thanh `Điều khiển demo`** để ép một vùng sang vàng hoặc đỏ ngay lập tức, thay vì ngồi chờ cảnh báo ngẫu nhiên. Một sự cố đỏ giữ đèn đỏ ~10 giây rồi tắt dần qua vàng về xanh trong khoảng 25 giây — đủ để người xem thấy đèn, nghe còi và thấy ảnh được chụp.
+3. Nút `Về bình thường` đưa cả 3 vùng về xanh ngay.
+
+Kiểm chứng bộ mô phỏng (không cần trình duyệt):
+
+```bash
+node src/js/mock-data.test.js
 ```
 
 ## Tài liệu thiết kế chi tiết
@@ -96,7 +111,11 @@ Bản mô tả thiết kế đầy đủ (nguồn gốc từ tài liệu thiết
 
 ## Lộ trình phát triển
 
-- [ ] Kết nối phần mềm với API thật từ thân thiết bị (REST hoặc WebSocket)
+Bước chặn đầu tiên **không phải viết code mà là chốt giao thức** giữa thân thiết bị và phần mềm: REST hay WebSocket, schema JSON ra sao, luồng camera qua RTSP/MJPEG/WebRTC. Chốt xong thì firmware và phần mềm mới làm song song được.
+
+- [ ] Chốt giao thức thân thiết bị ↔ phần mềm (dữ liệu đo + luồng hình ảnh)
+- [ ] Thay `mock-data.js` bằng nguồn dữ liệu thật (REST polling hoặc WebSocket — khuyến nghị WebSocket)
+- [ ] Thay `camera.js` bằng luồng hình ảnh thật từ 3 camera
 - [ ] Lưu trữ dữ liệu lịch sử vào cơ sở dữ liệu (thay vì bộ nhớ trình duyệt)
 - [ ] Xác thực đăng nhập cho người vận hành
 - [ ] Xuất báo cáo (PDF/Excel) theo khoảng thời gian
