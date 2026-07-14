@@ -23,6 +23,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
   padding: 16px 24px;
   border-bottom: 1px solid var(--panel-border);
 }
@@ -37,12 +39,91 @@ body {
   font-size: 0.85rem;
 }
 
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .env-readout {
   display: flex;
   gap: 16px;
   font-size: 0.9rem;
   color: var(--text-dim);
 }
+
+/* Nút bật/tắt tiếng. Trình duyệt chặn phát âm thanh cho tới khi người dùng bấm — trạng thái
+   "locked" phải nổi bật, nếu không người trình bày sẽ không biết vì sao còi câm. */
+.sound-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sound-btn.locked {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sound-btn.on { border-color: var(--green); color: var(--green); }
+.sound-btn.muted { color: var(--text-dim); }
+
+.demo-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 24px;
+  background: #131d27;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.demo-bar-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.zone-controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.control-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.ctrl-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ctrl-btn:hover { border-color: var(--accent); }
+.ctrl-yellow { color: var(--yellow); }
+.ctrl-red { color: var(--red); }
+.ctrl-reset { color: var(--green); margin-left: auto; }
 
 .zones {
   display: grid;
@@ -100,30 +181,23 @@ body {
   aspect-ratio: 16 / 9;
   background: #0a1017;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-dim);
-  font-size: 0.8rem;
-  border: 1px dashed var(--panel-border);
+  border: 1px solid var(--panel-border);
   margin-bottom: 12px;
-  position: relative;
   overflow: hidden;
 }
 
-.camera-feed.recording::after {
-  content: "● REC";
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  color: var(--red);
-  font-size: 0.75rem;
-  font-weight: bold;
+/* Canvas do camera.js gắn vào. Chỉ báo ● REC được vẽ bên trong canvas nên nó cũng xuất hiện
+   trong ảnh chụp — giống camera giám sát thật. */
+.camera-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .dose-value {
   font-size: 2rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums; /* số không nhảy ngang khi giá trị đổi */
 }
 
 .dose-unit {
@@ -151,11 +225,13 @@ body {
 .status-yellow .status-label { color: var(--yellow); }
 .status-red .status-label { color: var(--red); }
 
-.alert-log {
+.alert-log,
+.evidence {
   padding: 0 24px 24px;
 }
 
-.alert-log h2 {
+.alert-log h2,
+.evidence h2 {
   font-size: 1rem;
   color: var(--text-dim);
   font-weight: 600;
@@ -189,9 +265,126 @@ body {
 .log-entry.level-yellow { color: var(--yellow); }
 .log-entry.level-red { color: var(--red); }
 
+/* Khu xem lại bằng chứng: ảnh chụp lúc cảnh báo, kèm suất liều và mốc thời gian. */
+.gallery-empty,
+.gallery-note {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 0 0 8px;
+}
+
+.gallery-note { margin: 8px 0 0; }
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.snapshot {
+  margin: 0;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.snapshot.level-yellow { border-color: var(--yellow); }
+.snapshot.level-red { border-color: var(--red); }
+
+.snapshot img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.snapshot-failed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  background: #0a1017;
+}
+
+.snapshot figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.snapshot figcaption strong {
+  font-size: 0.85rem;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.snapshot.level-yellow figcaption strong { color: var(--yellow); }
+.snapshot.level-red figcaption strong { color: var(--red); }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 9, 13, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 10;
+}
+
+.modal[hidden] { display: none; }
+
+.modal-content {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 12px;
+  max-width: 900px;
+  width: 100%;
+}
+
+.modal-content img {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.modal-caption {
+  margin: 10px 2px 2px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.modal-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
 .footer {
   padding: 12px 24px 24px;
   color: var(--text-dim);
   font-size: 0.75rem;
   text-align: center;
+}
+
+.footer code {
+  color: var(--accent);
+  font-size: 0.72rem;
 }

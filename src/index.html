@@ -12,15 +12,27 @@
       <h1>HTG — Hệ thống giám sát phóng xạ</h1>
       <span class="subtitle">Giám sát 3 vùng theo thời gian thực</span>
     </div>
-    <div class="env-readout" id="env-readout">
-      <span id="env-temp">-- °C</span>
-      <span id="env-humidity">-- %RH</span>
-      <span id="env-pressure">-- hPa</span>
+    <div class="topbar-right">
+      <div class="env-readout">
+        <span id="env-temp">-- °C</span>
+        <span id="env-humidity">-- %RH</span>
+        <span id="env-pressure">-- hPa</span>
+      </div>
+      <button id="sound-btn" class="sound-btn locked" type="button">🔇 Bấm để bật tiếng</button>
     </div>
   </header>
 
+  <!-- Thanh điều khiển demo: ép cảnh báo để chủ động nhịp trình bày, không phải chờ spike ngẫu nhiên -->
+  <section class="demo-bar">
+    <span class="demo-bar-title">Điều khiển demo</span>
+    <div class="zone-controls" id="zone-controls">
+      <!-- các nút Vàng/Đỏ cho từng vùng do app.js dựng -->
+    </div>
+    <button id="reset-btn" class="ctrl-btn ctrl-reset" type="button">Về bình thường</button>
+  </section>
+
   <main class="zones" id="zones">
-    <!-- 3 zone cards are rendered here by app.js -->
+    <!-- 3 thẻ vùng do app.js dựng một lần lúc khởi động -->
   </main>
 
   <section class="alert-log">
@@ -30,11 +42,30 @@
     </div>
   </section>
 
+  <section class="evidence">
+    <h2>Lịch sử ảnh cảnh báo</h2>
+    <p class="gallery-empty" id="gallery-empty">
+      Chưa có ảnh nào. Khi một vùng vượt ngưỡng, hệ thống tự chụp ảnh camera 10 giây một lần và lưu kèm giá trị đo tại thời điểm đó.
+    </p>
+    <div class="gallery" id="gallery"></div>
+    <p class="gallery-note" id="gallery-note"></p>
+  </section>
+
   <footer class="footer">
-    <span>Dữ liệu hiện đang mô phỏng (mock-data.js). Thay bằng API/WebSocket thật khi tích hợp phần cứng.</span>
+    <span>Dữ liệu và hình ảnh camera hiện đang mô phỏng. Thay <code>mock-data.js</code> và <code>camera.js</code> bằng nguồn thật khi tích hợp phần cứng.</span>
   </footer>
 
+  <div class="modal" id="modal" hidden>
+    <div class="modal-content">
+      <button class="modal-close" id="modal-close" type="button" aria-label="Đóng">✕</button>
+      <img id="modal-image" alt="Ảnh camera lúc cảnh báo" />
+      <p class="modal-caption" id="modal-caption"></p>
+    </div>
+  </div>
+
   <script src="js/mock-data.js"></script>
+  <script src="js/camera.js"></script>
+  <script src="js/alarm.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
